@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+dashboard/node_modules/
+
+# Database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+
+# Build outputs
+dashboard/build/
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Device IDs
+.ai-tracker-device-id

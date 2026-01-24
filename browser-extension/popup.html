@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    h2 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+      color: #333;
+    }
+    .status {
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+    .status.active {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .config {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #ddd;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    .info {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🤖 AI Usage Tracker</h2>
+  <div id="status" class="status inactive">Checking status...</div>
+  
+  <div class="config">
+    <label>API URL:</label>
+    <input type="text" id="apiUrl" placeholder="http://localhost:3000/api">
+    <button id="save">Save Settings</button>
+    <div class="info">
+      Make sure your server is running and accessible from this browser.
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

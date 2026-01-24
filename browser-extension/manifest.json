@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "AI Usage Tracker",
+  "version": "1.0.0",
+  "description": "Automatically track your AI service usage across websites",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://claude.ai/*",
+    "https://www.perplexity.ai/*",
+    "https://bard.google.com/*",
+    "https://www.bing.com/*",
+    "https://www.cursor.com/*",
+    "https://github.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Usage Tracker"
+  }
+}

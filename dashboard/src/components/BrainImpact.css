@@ -1,0 +1,147 @@
+.brain-impact {
+  background: white;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  border: 1px solid #f0f0f0;
+}
+
+.brain-impact h2 {
+  margin-bottom: 25px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.loading, .no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.impact-overview {
+  margin-bottom: 25px;
+}
+
+.impact-level {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 5px solid;
+  margin-bottom: 20px;
+}
+
+.impact-icon {
+  font-size: 3rem;
+}
+
+.impact-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 1.3rem;
+}
+
+.impact-info p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.usage-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #667eea;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.age-notes, .risk-factors, .recommendations {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 6px;
+}
+
+.age-notes {
+  background: #e7f3ff;
+  border-left: 4px solid #2196F3;
+}
+
+.age-notes h4 {
+  margin: 0 0 10px 0;
+  color: #1976D2;
+}
+
+.age-notes p {
+  margin: 0;
+  color: #1565C0;
+}
+
+.risk-factors {
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+}
+
+.risk-factors h4 {
+  margin: 0 0 10px 0;
+  color: #856404;
+}
+
+.risk-factors ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #856404;
+}
+
+.risk-factors li {
+  margin: 5px 0;
+}
+
+.recommendations {
+  background: #d4edda;
+  border-left: 4px solid #28a745;
+}
+
+.recommendations h4 {
+  margin: 0 0 10px 0;
+  color: #155724;
+}
+
+.recommendations ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #155724;
+}
+
+.recommendations li {
+  margin: 5px 0;
+}
+
+@media (max-width: 768px) {
+  .impact-level {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .usage-stats {
+    grid-template-columns: 1fr;
+  }
+}
