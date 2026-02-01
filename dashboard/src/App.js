@@ -55,7 +55,7 @@ function App() {
   useEffect(() => {
     fetchData();
     loadUserProfile();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    const interval = setInterval(fetchData, 10000); // Refresh every 10 seconds for more real-time updates
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
