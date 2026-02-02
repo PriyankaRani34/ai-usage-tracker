@@ -8,7 +8,8 @@
     "dev": "nodemon server/index.js",
     "client:desktop": "node clients/desktop/index.js",
     "monitor": "node monitors/desktop-monitor.js",
-    "build": "cd dashboard && npm run build"
+    "build": "cd dashboard && npm run build",
+    "build:backend": "echo 'Backend build - no build step needed'"
   },
   "keywords": [
     "ai",
