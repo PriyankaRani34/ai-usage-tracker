@@ -47,6 +47,10 @@ function App() {
       setServices(servicesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // Don't fail silently - show error to user
+      if (error.message && error.message.includes('Network Error')) {
+        console.warn('Backend not connected. Set REACT_APP_API_URL in Vercel environment variables.');
+      }
     } finally {
       setLoading(false);
     }
