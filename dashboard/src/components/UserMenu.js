@@ -4,7 +4,7 @@ import './UserMenu.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-function UserMenu({ onProfileUpdate }) {
+function UserMenu({ onProfileUpdate, onLogout }) {
   const [profile, setProfile] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -27,12 +27,21 @@ function UserMenu({ onProfileUpdate }) {
   }, []);
 
   const loadProfile = async () => {
-    const userId = localStorage.getItem('userId') || 'default-user';
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+    
     try {
       const response = await axios.get(`${API_URL}/user/profile/${userId}`);
       setProfile(response.data);
     } catch (error) {
-      // Profile doesn't exist
+      // Profile doesn't exist - try to get from auth endpoint
+      try {
+        const authResponse = await axios.get(`${API_URL}/auth/user/${userId}`);
+        setProfile(authResponse.data);
+      } catch (authError) {
+        // User not found
+        console.log('User profile not found');
+      }
     }
   };
 
@@ -55,8 +64,15 @@ function UserMenu({ onProfileUpdate }) {
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout? Your data will be saved.')) {
-      localStorage.removeItem('userId');
-      window.location.reload();
+      if (onLogout) {
+        onLogout();
+      } else {
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userAge');
+        window.location.reload();
+      }
     }
   };
 
@@ -65,9 +81,9 @@ function UserMenu({ onProfileUpdate }) {
     setShowMenu(false);
   };
 
-  if (!profile || !profile.age) {
-    return null; // Don't show menu if profile not set up
-  }
+  // Show menu with email if profile exists, or show placeholder
+  const displayName = profile?.name || localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'User';
+  const displayAge = profile?.age || localStorage.getItem('userAge');
 
   return (
     <>
@@ -79,11 +95,11 @@ function UserMenu({ onProfileUpdate }) {
         >
           <div 
             className="user-avatar-small"
-            style={{ background: getAgeGroupColor(profile.age) }}
+            style={{ background: getAgeGroupColor(displayAge) }}
           >
-            {getInitials(profile.name)}
+            {getInitials(displayName)}
           </div>
-          <span className="user-name">{profile.name || 'User'}</span>
+          <span className="user-name">{displayName}</span>
           <svg 
             className={`menu-arrow ${showMenu ? 'open' : ''}`}
             width="12" 
@@ -99,13 +115,15 @@ function UserMenu({ onProfileUpdate }) {
             <div className="user-menu-header">
               <div 
                 className="user-avatar-large-menu"
-                style={{ background: getAgeGroupColor(profile.age) }}
+                style={{ background: getAgeGroupColor(displayAge) }}
               >
-                {getInitials(profile.name)}
+                {getInitials(displayName)}
               </div>
               <div className="user-menu-info">
-                <div className="user-menu-name">{profile.name || 'User'}</div>
-                <div className="user-menu-email">{profile.age} years old</div>
+                <div className="user-menu-name">{displayName}</div>
+                <div className="user-menu-email">
+                  {displayAge ? `${displayAge} years old` : localStorage.getItem('userEmail') || 'No age set'}
+                </div>
               </div>
             </div>
 
@@ -186,7 +204,11 @@ function UserProfileModal({ profile, onClose }) {
     }
 
     setLoading(true);
-    const userId = localStorage.getItem('userId') || 'default-user';
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      alert('Not logged in');
+      return;
+    }
 
     try {
       await axios.post(`${API_URL}/user/profile`, {

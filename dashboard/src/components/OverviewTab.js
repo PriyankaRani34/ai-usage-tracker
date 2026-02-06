@@ -4,7 +4,7 @@ import './OverviewTab.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-function OverviewTab({ summary, stats, devices, formatDuration, userId }) {
+function OverviewTab({ summary, stats, devices, formatDuration, userId, period }) {
   const [usageByDevice, setUsageByDevice] = useState([]);
   const [topTools, setTopTools] = useState([]);
 
@@ -16,6 +16,12 @@ function OverviewTab({ summary, stats, devices, formatDuration, userId }) {
     // Calculate usage by device
     const deviceUsage = {};
     const toolUsage = {};
+
+    if (!stats || !Array.isArray(stats)) {
+      setUsageByDevice([]);
+      setTopTools([]);
+      return;
+    }
 
     stats.forEach(stat => {
       // Device usage

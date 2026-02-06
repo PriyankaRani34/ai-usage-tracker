@@ -1,7 +1,10 @@
 // Load saved settings
-chrome.storage.sync.get(['apiUrl', 'deviceId'], (result) => {
+chrome.storage.sync.get(['apiUrl', 'deviceId', 'userId'], (result) => {
   if (result.apiUrl) {
     document.getElementById('apiUrl').value = result.apiUrl;
+  }
+  if (result.userId) {
+    document.getElementById('userId').value = result.userId;
   }
   
   // Check connection
@@ -28,8 +31,15 @@ async function checkConnection(apiUrl) {
 // Save settings
 document.getElementById('save').addEventListener('click', () => {
   const apiUrl = document.getElementById('apiUrl').value;
-  chrome.storage.sync.set({ apiUrl }, () => {
+  const userId = document.getElementById('userId').value.trim() || null;
+  chrome.storage.sync.set({ apiUrl, userId }, () => {
     checkConnection(apiUrl);
-    alert('Settings saved!');
+    if (userId) {
+      alert('Settings saved! Your device will now track usage for user: ' + userId);
+      // Re-register device with userId
+      chrome.runtime.sendMessage({ action: 'registerDevice' });
+    } else {
+      alert('Settings saved! Note: Add User ID to track usage across devices.');
+    }
   });
 });

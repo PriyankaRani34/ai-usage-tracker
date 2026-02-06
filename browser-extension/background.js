@@ -34,10 +34,22 @@ async function getDeviceId() {
   return deviceId;
 }
 
+// Get userId from storage
+async function getUserId() {
+  const result = await chrome.storage.sync.get(['userId']);
+  return result.userId || null;
+}
+
+// Set userId
+async function setUserId(userId) {
+  await chrome.storage.sync.set({ userId });
+}
+
 // Register device
 async function registerDevice() {
   const deviceId = await getDeviceId();
   const apiUrl = await getApiUrl();
+  const userId = await getUserId();
   
   try {
     await fetch(`${apiUrl}/devices`, {
@@ -46,7 +58,8 @@ async function registerDevice() {
       body: JSON.stringify({
         id: deviceId,
         name: 'Browser Extension',
-        type: 'laptop'
+        type: 'laptop',
+        userId: userId || null
       })
     });
   } catch (error) {
@@ -58,6 +71,7 @@ async function registerDevice() {
 async function logUsage(serviceName, durationSeconds, requestCount) {
   const deviceId = await getDeviceId();
   const apiUrl = await getApiUrl();
+  const userId = await getUserId();
   
   try {
     await fetch(`${apiUrl}/usage`, {
@@ -68,6 +82,7 @@ async function logUsage(serviceName, durationSeconds, requestCount) {
         serviceName,
         durationSeconds,
         requestCount,
+        userId: userId || null,
         metadata: {
           platform: 'browser',
           source: 'extension'
@@ -196,6 +211,14 @@ chrome.runtime.onSuspend.addListener(() => {
     if (duration > 0) {
       logUsage(lastActiveTab.service, duration, requests);
     }
+  }
+});
+
+// Handle messages from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'registerDevice') {
+    registerDevice().then(() => sendResponse({ success: true }));
+    return true; // Will respond asynchronously
   }
 });
 

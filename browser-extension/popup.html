@@ -66,9 +66,15 @@
   <div class="config">
     <label>API URL:</label>
     <input type="text" id="apiUrl" placeholder="http://localhost:3000/api">
+    <label style="margin-top: 10px;">User ID (from dashboard):</label>
+    <input type="text" id="userId" placeholder="Your user ID">
     <button id="save">Save Settings</button>
     <div class="info">
-      Make sure your server is running and accessible from this browser.
+      <strong>Setup:</strong><br>
+      1. Login to dashboard<br>
+      2. Copy your User ID from browser console (localStorage.getItem('userId'))<br>
+      3. Paste it here and save<br>
+      4. Your usage will be tracked across all devices
     </div>
   </div>
 

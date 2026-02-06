@@ -6,6 +6,7 @@ function TimePeriodSelector({ period, onPeriodChange }) {
     { value: '1d', label: 'Last 24 Hours' },
     { value: '7d', label: 'Last 7 Days' },
     { value: '30d', label: 'Last 30 Days' },
+    { value: 'month', label: 'This Month' },
     { value: 'all', label: 'All Time' }
   ];
 

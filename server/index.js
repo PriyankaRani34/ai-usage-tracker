@@ -3,6 +3,7 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -92,11 +93,21 @@ function initializeDatabase() {
     // User profiles table
     db.run(`CREATE TABLE IF NOT EXISTS user_profiles (
       id TEXT PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
       name TEXT,
       age INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Add email and password columns if they don't exist (migration)
+    db.run(`ALTER TABLE user_profiles ADD COLUMN email TEXT`, (err) => {
+      // Ignore error if column already exists
+    });
+    db.run(`ALTER TABLE user_profiles ADD COLUMN password TEXT`, (err) => {
+      // Ignore error if column already exists
+    });
 
     // Cognitive health metrics table
     db.run(`CREATE TABLE IF NOT EXISTS cognitive_health (
@@ -267,7 +278,7 @@ app.post('/api/devices', (req, res) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ success: true, deviceId: id });
+      res.json({ success: true, deviceId: id, userId: userId || null });
     }
   );
 });
@@ -295,10 +306,23 @@ app.post('/api/devices/:deviceId/link-user', (req, res) => {
 
 // Log AI usage
 app.post('/api/usage', (req, res) => {
-  const { deviceId, serviceName, durationSeconds, requestCount, metadata } = req.body;
+  const { deviceId, serviceName, durationSeconds, requestCount, metadata, userId } = req.body;
 
   if (!deviceId || !serviceName) {
     return res.status(400).json({ error: 'Missing required fields: deviceId, serviceName' });
+  }
+
+  // If userId is provided, link device to user
+  if (userId) {
+    db.run(
+      'UPDATE devices SET user_id = ? WHERE id = ?',
+      [userId, deviceId],
+      (err) => {
+        if (err) {
+          console.error('Error linking device to user:', err);
+        }
+      }
+    );
   }
 
   // Get or create service
@@ -430,6 +454,9 @@ app.get('/api/usage/summary', (req, res) => {
     case '30d':
       dateFilter = "timestamp >= datetime('now', '-30 days')";
       break;
+    case 'month':
+      dateFilter = "timestamp >= datetime('now', 'start of month')";
+      break;
     case 'all':
       dateFilter = '1=1';
       break;
@@ -464,6 +491,41 @@ app.get('/api/usage/summary', (req, res) => {
   });
 });
 
+// Get monthly usage breakdown by day
+app.get('/api/usage/monthly', (req, res) => {
+  const { userId, year, month } = req.query;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  const targetYear = year || new Date().getFullYear();
+  const targetMonth = month || (new Date().getMonth() + 1);
+
+  const query = `
+    SELECT 
+      DATE(ul.timestamp) as date,
+      SUM(ul.duration_seconds) / 3600.0 as total_hours,
+      SUM(ul.request_count) as total_requests,
+      COUNT(DISTINCT ul.device_id) as device_count,
+      COUNT(DISTINCT ul.service_id) as service_count
+    FROM usage_logs ul
+    JOIN devices d ON ul.device_id = d.id
+    WHERE d.user_id = ?
+      AND strftime('%Y', ul.timestamp) = ?
+      AND strftime('%m', ul.timestamp) = ?
+    GROUP BY DATE(ul.timestamp)
+    ORDER BY date ASC
+  `;
+
+  db.all(query, [userId, targetYear.toString(), targetMonth.toString().padStart(2, '0')], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json(rows);
+  });
+});
+
 // Get services list
 app.get('/api/services', (req, res) => {
   db.all('SELECT * FROM ai_services ORDER BY name', (err, rows) => {
@@ -472,6 +534,106 @@ app.get('/api/services', (req, res) => {
     }
     res.json(rows);
   });
+});
+
+// ========== AUTHENTICATION ENDPOINTS ==========
+
+// Helper function to hash password
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+// Register new user
+app.post('/api/auth/register', (req, res) => {
+  const { email, password, name, age } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
+  // Validate password length
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  }
+
+  const userId = crypto.randomUUID();
+  const hashedPassword = hashPassword(password);
+
+  db.run(
+    `INSERT INTO user_profiles (id, email, password, name, age) 
+     VALUES (?, ?, ?, ?, ?)`,
+    [userId, email, hashedPassword, name || null, age || null],
+    function(err) {
+      if (err) {
+        if (err.message.includes('UNIQUE constraint failed')) {
+          return res.status(400).json({ error: 'Email already registered' });
+        }
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ 
+        success: true, 
+        userId: userId,
+        email: email,
+        message: 'User registered successfully'
+      });
+    }
+  );
+});
+
+// Login user
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  const hashedPassword = hashPassword(password);
+
+  db.get(
+    'SELECT id, email, name, age FROM user_profiles WHERE email = ? AND password = ?',
+    [email, hashedPassword],
+    (err, user) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+      res.json({
+        success: true,
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        age: user.age
+      });
+    }
+  );
+});
+
+// Get user by ID (for session validation)
+app.get('/api/auth/user/:userId', (req, res) => {
+  const { userId } = req.params;
+  
+  db.get(
+    'SELECT id, email, name, age, created_at FROM user_profiles WHERE id = ?',
+    [userId],
+    (err, user) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      res.json(user);
+    }
+  );
 });
 
 // ========== USER PROFILE ENDPOINTS ==========
