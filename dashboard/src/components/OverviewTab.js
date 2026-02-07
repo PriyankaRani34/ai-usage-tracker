@@ -68,20 +68,21 @@ function OverviewTab({ summary, stats, devices, formatDuration, userId, period }
     );
   };
 
-  const getAverageDailyHours = () => {
+  const getAverageDailyMinutes = () => {
     if (!summary || !summary.total_duration) return 0;
-    // Assuming 7 days period
-    return (summary.total_duration / 3600) / 7;
+    // Assuming 7 days period, convert to minutes
+    return (summary.total_duration / 60) / 7;
   };
 
-  const getUsageLevel = (hours) => {
-    if (hours >= 4) return { label: 'High', color: '#ef4444' };
-    if (hours >= 2) return { label: 'Moderate', color: '#f59e0b' };
+  const getUsageLevel = (minutes) => {
+    // Convert thresholds from hours to minutes: 4h = 240min, 2h = 120min
+    if (minutes >= 240) return { label: 'High', color: '#ef4444' };
+    if (minutes >= 120) return { label: 'Moderate', color: '#f59e0b' };
     return { label: 'Low', color: '#10b981' };
   };
 
-  const avgHours = getAverageDailyHours();
-  const usageLevel = getUsageLevel(avgHours);
+  const avgMinutes = getAverageDailyMinutes();
+  const usageLevel = getUsageLevel(avgMinutes);
 
   return (
     <div className="overview-tab">
@@ -98,7 +99,7 @@ function OverviewTab({ summary, stats, devices, formatDuration, userId, period }
               {usageLevel.label}
             </span>
           </div>
-          <div className="metric-value">{avgHours.toFixed(1)}h</div>
+          <div className="metric-value">{Math.round(avgMinutes)}m</div>
           <div className="metric-label">Average Daily AI Usage</div>
         </div>
 
